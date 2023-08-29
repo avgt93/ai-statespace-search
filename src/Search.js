@@ -68,7 +68,6 @@ export class SearchTree {
 			let tempNode = new SearchTree(tempGame);
 			states.push(tempNode);
 		}
-
 		return states;
 	}
 
@@ -121,9 +120,5 @@ export class SearchTree {
 
 let newGame = new Game();
 let searchTree = new SearchTree().searchState();
-console.log(searchTree.data);
-let temp = searchTree;
-while (temp.parent != null) {
-	temp.display();
-	temp = temp.parent;
-}
+export const searchResults = searchTree;
+

@@ -28,6 +28,7 @@ export class Game {
 	constructor() {
 		this.state = new State(3, 3, true);
 	}
+	//true = right, false = left
 	gameStatus = GameState.Running;
 	movePerformed = null;
 
@@ -37,15 +38,6 @@ export class Game {
 			3 - this.state.cannibals,
 			!this.state.boat
 		);
-
-		if (
-			this.state.missionaries === 0 &&
-			this.state.cannibals === 0 &&
-			this.state.boat === false
-		) {
-			this.gameStatus = GameState.Won;
-			return;
-		}
 
 		if (
 			(this.state.cannibals > this.state.missionaries &&
@@ -66,6 +58,16 @@ export class Game {
 			this.gameStatus = GameState.Failed;
 			return;
 		}
+
+		if (
+			this.state.missionaries === 0 &&
+			this.state.cannibals === 0 &&
+			this.state.boat === false
+		) {
+			this.gameStatus = GameState.Won;
+			return;
+		}
+
 		this.gameStatus = GameState.Running;
 	}
 
@@ -83,12 +85,13 @@ export class Game {
 		if (this.state.boat) {
 			nextState.missionaries -= action.missionaries;
 			nextState.cannibals -= action.cannibals;
+			nextState.boat = false;
 		} else {
 			nextState.missionaries += action.missionaries;
 			nextState.cannibals += action.cannibals;
+			nextState.boat = true;
 		}
-
-		nextState.boat = !this.state.boat;
+		// console.log(nextState.boat);
 
 		if (
 			nextState.missionaries < 0 ||
@@ -127,8 +130,8 @@ let actions = [
 
 for (let i = 0; i < actions.length; i++) {
 	newGame.move(actions[i]);
-	newGame.display();
 }
 
-let goalState = new State(0, 0, false);
+// let goalState = new State(0, 0, false);
 // console.log(newGame.gameStatus);
+// newGame.display();
