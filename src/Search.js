@@ -99,7 +99,7 @@ export class SearchTree {
 			}
 			visited.push(currentState);
 			if (currentState.data.gameStatus === GameState.Won) {
-				return currentState;
+				return initialNode;
 			}
 			if (currentState.data.gameStatus === GameState.Running) {
 				let newStates = currentState.getAllStates();

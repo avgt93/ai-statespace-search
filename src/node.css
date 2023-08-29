@@ -1,0 +1,12 @@
+.baksa{
+  width: 800px;
+  height: 20px;
+  display: flex;
+  flex-direction: row;
+}
+
+.node{
+  width: 500px;
+  height: 100px;
+  outline: 1px solid lime;
+}
