@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Game } from "../src/game/Game.js";
 import { State } from "../src/game/Game.js";
 import { parse, stringify } from "flatted";
-import { searchResults } from "../src/Search.js";
+import { searchResults } from "../src/game/Search.js";
 import Node from "./Node.jsx";
 import "./styles/App.css";
 import { GameState } from "./game/config.js";
