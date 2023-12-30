@@ -2,11 +2,11 @@
 name = "8puzzle"
 version = "0.1.0"
 description = ""
-authors = ["Abhijeet <abhijeetpoudel@gmail.com>"]
+authors = ["zeph111 <luniva121@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.12"
 graphviz = "^0.20.1"
 
 

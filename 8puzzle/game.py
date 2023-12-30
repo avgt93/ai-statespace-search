@@ -73,6 +73,8 @@ class Game:
         if (emptyPos + 1) % 3 == 0:
             return False
     
+    self.check_game()
+    
     self.current_state.numList[emptyPos]=self.current_state.numList[emptyPos + action.value]
     
     self.current_state.numList[emptyPos + action.value] = " "
