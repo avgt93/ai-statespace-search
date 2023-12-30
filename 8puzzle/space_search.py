@@ -22,17 +22,10 @@ class AstarNode:
             encoded_i=math.floor(goal_index/3)
             encoded_j= goal_index -3 * encoded_i
 
-            manhattendist = manhattendist+ abs(i-encoded_i)+abs(j-encoded_j)
-        index= node.data.current_state.numList.index(" ")
-        i=math.floor(index/3)
-        j=index-3*i
-
-        goal_index=node.data.goal_state.numList.index(" ")
-        encoded_i=math.floor(goal_index/3)
-        encoded_j= goal_index -3 *encoded_i
-
-        return manhattendist+abs(i-encoded_i)+abs(j-encoded_j)
-    
+            manhattendist = manhattendist+ +abs(j-encoded_j)+abs(i-encoded_i)
+   
+        return manhattendist
+  
     @staticmethod
     def no_of_misplaced_tiles(node):
         misplaced=0
@@ -40,10 +33,10 @@ class AstarNode:
             if node.data.current_state.numList.index(k) != node.data.goal_state.numList.index(k):
                 misplaced+=1
 
-            if node.data.current_state.numList.index(" ") != node.data.goal_state.numList.index(" "):
-                misplaced+=1
+        # if node.data.current_state.numList.index(" ") != node.data.goal_state.numList.index(" "):
+        #     misplaced+=1
             
-            return misplaced
+        return misplaced
 
 class Node:
     def __init__(self, state: Game):
@@ -138,10 +131,6 @@ class Search:
         queue = []
         queue.append(self.root)
 
-        # self.graphvize.append(f'{str(self.root)};')
-        # graph.node(str(self.root), label=str(self.root.data))
-
-
         count=0
         while queue:
             current_node = queue.pop(0)
@@ -178,33 +167,33 @@ class Search:
                         
                      
 
-    def start_search_dfs(self):
-        stack = []
-        stack.append(self.root)
+    # def start_search_dfs(self):
+    #     stack = []
+    #     stack.append(self.root)
 
-        while stack:
-            current_node = stack.pop(0)
-            if current_node in self.searchedNodes:
-                current_node.terminated = True
-                continue
+    #     while stack:
+    #         current_node = stack.pop(0)
+    #         if current_node in self.searchedNodes:
+    #             current_node.terminated = True
+    #             continue
 
-            self.searchedNodes.append(current_node)
+    #         self.searchedNodes.append(current_node)
 
-            if current_node.data.gameStatus == GameState.Won:
-                continue
+    #         if current_node.data.gameStatus == GameState.Won:
+    #             continue
 
-            if current_node.data.gameStatus == GameState.Running:
-                children = current_node.get_all_children()
-                temp = []
-                for child in children:
-                    if child not in self.searchedNodes:
-                        child.parent.append(current_node)
-                        current_node.add_child(child)
-                        temp.append(child)
+    #         if current_node.data.gameStatus == GameState.Running:
+    #             children = current_node.get_all_children()
+    #             temp = []
+    #             for child in children:
+    #                 if child not in self.searchedNodes:
+    #                     child.parent.append(current_node)
+    #                     current_node.add_child(child)
+    #                     temp.append(child)
 
-                stack = [*temp, *stack]
+    #             stack = [*temp, *stack]
 
-    def start_single_search_dfs(self):
+    def start_single_search_dfs(self,depth=10):
         print("Performing Depth First Search\n")
         generatedNodes=set()
         generatedNodes.add(str(self.root.data.current_state.numList))
@@ -228,6 +217,7 @@ class Search:
 
 
             if current_node.data.gameStatus == GameState.Running:
+                
                 children = current_node.get_all_children()
                 temp = []
                 for child in children:
@@ -260,7 +250,7 @@ class Search:
         for depth in range(1, max_depth + 1):
             generatedNodes=set()
             generatedNodes.add(str(self.root.data.current_state.numList))
-
+            # print(generatedNodes)
             print(self.root)
           
             result = self.depth_limited_search(self.root, depth, generatedNodes, depth)
@@ -269,7 +259,6 @@ class Search:
                 return result
 
     def depth_limited_search(self, node, depth, generatedNodes, current_depth):
-    
         if depth == 0:
             if node.data.gameStatus == GameState.Won:
                 self.finished = True
@@ -282,7 +271,9 @@ class Search:
         self.searchedNodes.append(node)
 
         if node.data.gameStatus == GameState.Running:
+            
            children=node.get_all_children()
+        #    print(children)
            for child in children:
                if str(child.data.current_state.numList) not in generatedNodes:
                    generatedNodes.add(str(child.data.current_state.numList))
@@ -367,7 +358,6 @@ class Search:
         generatedNodes=set()
         generatedNodes.add(str(self.root.data.current_state.numList))
         print(self.root)    
-
         count=0 
         while list:
             count+=1
@@ -375,14 +365,11 @@ class Search:
             if current_node in self.searchedNodes:
                 current_node.terminated=True
                 continue
-
             self.searchedNodes.append(current_node)
-
             if current_node.data.gameStatus == GameState.Won:
                 self.finished = True
                 print(f"Total Number of States:{count}")
                 return current_node
-            
             if current_node.data.gameStatus==GameState.Running:
                 children=current_node.get_all_children()
                 for child in children:
@@ -391,14 +378,11 @@ class Search:
                         current_node.add_child(child)   
                         child.g_value=current_node.g_value+1
                         child.f_value=child.g_value+AstarNode.no_of_misplaced_tiles(child)
-
                         generatedNodes.add(str(child.data.current_state.numList))
-
                         if not self.finished:
                             list.append(child)
                             list.sort(key=lambda x: x.f_value)
                             print(child)    
-                            
                             graph.node(str(current_node.data.current_state))
                             if child.data.gameStatus==GameState.Won:
                                 graph.node(str(child.data.current_state), style='filled', color='lightgreen')
@@ -406,26 +390,7 @@ class Search:
                                 graph.node(str(child.data.current_state))
                             graph.edge(str(current_node.data.current_state), str(child.data.current_state), label=f"{child.data.movePerformed} h:{child.f_value}")
                             graph.render('total_graph', format='png', cleanup=True)
-
                         if child.data.gameStatus==GameState.Won:
                             self.finished = True
                            
 
-
-
-
-# search = Search(
-#             Node(
-#                 Game(
-#                     State([2, 4, 6, 7, 3, 1, " ", 5, 8]),
-#                     State([1, 2, 3, 4, 5, 6, 7, 8, " "]),
-#                 )
-#             )
-#         )
-
-# results = search.start_single_search_bfs()
-# while len(results.parent) != 0:
-#           print(results)
-#           results = results.parent[0]
-
-# print(search.root)
