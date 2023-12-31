@@ -125,7 +125,7 @@ let newGame = new Game();
 let actions = [
 	ActionSpace.Cannibal2,
 	ActionSpace.Cannibal,
-	ActionSpace.Cannibal,
+	ActionSpace.MissionaryCannibal,
 ];
 
 for (let i = 0; i < actions.length; i++) {

@@ -1,13 +1,10 @@
 import bisect
-from game import Game_State, Action_Space, Game
-from copy import deepcopy
+from game import Game_State
 from a_star_node import Astar_Node
-import math
 import graphviz
 from node import Node
-import bisect
-import graphviz
 from typing import Set, List
+
 graph = graphviz.Digraph(comment="The Table")
 graph.attr(layout="dot")
 graph.attr(dpi="500")
@@ -88,7 +85,6 @@ class Search:
                         
                         depth+=1
                         depth_stack.append({"node": child, "depth": depth})
-                        
                         #guardclause
                         if depth > max_depth:
                             depth_stack.clear()

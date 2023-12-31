@@ -73,7 +73,7 @@ class Game:
         return False
 
     self.check_game()
-    self.gameState.numList[blank_index] ,self.gameState.numList[blank_index+action.value] = self.gameState.numList[blank_index + action.value], self.gameState.numList[blank_index]
+    self.current_state.num_list[blank_index] ,self.current_state.num_list[blank_index+action.value] = self.current_state.num_list[blank_index + action.value], self.current_state.num_list[blank_index]
     self.move_performed = action
     self.check_game()
     return True
