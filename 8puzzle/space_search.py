@@ -1,396 +1,252 @@
 import bisect
-from game import GameState, ActionSpace, Game, State
-from collections import deque
-import copy
+from game import Game_State, Action_Space, Game
+from copy import deepcopy
+from a_star_node import Astar_Node
 import math
 import graphviz
-
+from node import Node
+import bisect
+import graphviz
+from typing import Set, List
 graph = graphviz.Digraph(comment="The Table")
 graph.attr(layout="dot")
 graph.attr(dpi="500")
 
-class AstarNode:
-    @staticmethod
-    def manhatten_distance(node):
-        manhattendist=0
-        for k in range(1,9):
-            actual_index=node.data.current_state.numList.index(k)
-            i=math.floor(actual_index/3)
-            j=actual_index-3*i
-
-            goal_index=node.data.goal_state.numList.index(k)    
-            encoded_i=math.floor(goal_index/3)
-            encoded_j= goal_index -3 * encoded_i
-
-            manhattendist = manhattendist+ +abs(j-encoded_j)+abs(i-encoded_i)
-   
-        return manhattendist
-  
-    @staticmethod
-    def no_of_misplaced_tiles(node):
-        misplaced=0
-        for k in range(1,9):
-            if node.data.current_state.numList.index(k) != node.data.goal_state.numList.index(k):
-                misplaced+=1
-
-        # if node.data.current_state.numList.index(" ") != node.data.goal_state.numList.index(" "):
-        #     misplaced+=1
-            
-        return misplaced
-
-class Node:
-    def __init__(self, state: Game):
-        self.data = state
-        self.parent = []
-        self.children = []
-        self.terminated = False
-        self.goal = False
-
-    def __eq__(self, other):
-        if isinstance(other, Node):
-            if self.data.current_state.numList == other.data.current_state.numList:
-                return True
-            else:
-                return False
-
-        return False
-
-    def __str__(self):
-        return f"Move Performed: {self.data.movePerformed} Node:\n{self.data}"
-
-    def add_child(self, child_node):
-        self.children.append(child_node)
-
-    def get_all_children(self):
-        child_list = []
-
-        game = copy.deepcopy(self.data)
-        can_move = game.move(ActionSpace.MoveLeft)
-        if can_move:
-            node = Node(game)
-            child_list.append(node)
-
-        game = copy.deepcopy(self.data)
-        can_move = game.move(ActionSpace.MoveUp)
-        if can_move:
-            node = Node(game)
-            child_list.append(node)
-
-        game = copy.deepcopy(self.data)
-        can_move = game.move(ActionSpace.MoveDown)
-        if can_move:
-            node = Node(game)
-            child_list.append(node)
-
-        game = copy.deepcopy(self.data)
-        can_move = game.move(ActionSpace.MoveRight)
-        if can_move:
-            node = Node(game)
-            child_list.append(node)
-        return child_list
-    
-
-
-
 class Search:
-    def __init__(self, root: Node):
-        self.root = root
+    def __init__(self, root_node: Node):
+        self.root_node = root_node
         self.finished = False
-        self.searchedNodes = []  
-        self.graphvize=['digraph G {']  
+        self.searched_nodes: List[Node] = []
 
-
-    def start_search_bfs(self):
-        queue = []
-        queue.append(self.root)
-
-        while queue:
-            current_node = queue.pop(0)
-
-            if current_node in self.searchedNodes:
-                continue
-
-            self.searchedNodes.append(current_node)
-
-            if current_node.data.gameStatus == GameState.Won:
-                continue
-
-            if current_node.data.gameStatus == GameState.Running:
-                children = current_node.get_all_children()
-                for child in children:
-                    if child not in current_node.parent:
-                        child.parent.append(current_node)
-                        current_node.add_child(child)
-                        if child not in self.searchedNodes:
-                            queue.append(child)
-
-    def start_single_search_bfs(self):
+    def bfs(self) -> Node:
         print("Performing Breadth First Search\n")
-        generatedNodes=set()
-        generatedNodes.add(str(self.root.data.current_state.numList))
-        queue = []
-        queue.append(self.root)
+        fresh_nodes: Set[str] = set()
+        fresh_nodes.add(str(self.root_node.data.current_state.num_list))
+        queue: List[Node] = [self.root_node]
 
-        count=0
         while queue:
             current_node = queue.pop(0)
-            if current_node in self.searchedNodes:
+            if current_node in self.searched_nodes:
                 continue
 
-            count+=1
-
-            self.searchedNodes.append(current_node)
-
-            if current_node.data.gameStatus == GameState.Running:                
+            self.searched_nodes.append(current_node)
+            if current_node.data.game_status == Game_State.Running:
                 children = current_node.get_all_children()
-                for child in children:   
-                    if str(child.data.current_state.numList) not in generatedNodes:
-                        generatedNodes.add(str(child.data.current_state.numList))
-                        print(child)
-                        graph.node(str(current_node.data.current_state))
-                        if child.data.gameStatus==GameState.Won:
-                            graph.node(str(child.data.current_state), style='filled', color='lightgreen')
-                        else:
-                            graph.node(str(child.data.current_state))
-                        # check garna pryo yaha
-                        graph.edge(str(current_node.data.current_state), str(child.data.current_state), label=f"{child.data.movePerformed}")
-                        
-                        graph.render('bfs_graph', format='png', cleanup=True)
-
-                        queue.append(child)
-
-                        if child.data.gameStatus==GameState.Won:
-                            self.graphvize.append(f'"{str(child.data.current_state)}" [style=filled, color=lightgreen]}}')
-                            self.finished = True
-                            print(f"Total Number of States:{count}")
-                            return child            
-                        
-                     
-
-    # def start_search_dfs(self):
-    #     stack = []
-    #     stack.append(self.root)
-
-    #     while stack:
-    #         current_node = stack.pop(0)
-    #         if current_node in self.searchedNodes:
-    #             current_node.terminated = True
-    #             continue
-
-    #         self.searchedNodes.append(current_node)
-
-    #         if current_node.data.gameStatus == GameState.Won:
-    #             continue
-
-    #         if current_node.data.gameStatus == GameState.Running:
-    #             children = current_node.get_all_children()
-    #             temp = []
-    #             for child in children:
-    #                 if child not in self.searchedNodes:
-    #                     child.parent.append(current_node)
-    #                     current_node.add_child(child)
-    #                     temp.append(child)
-
-    #             stack = [*temp, *stack]
-
-    def start_single_search_dfs(self,depth=10):
-        print("Performing Depth First Search\n")
-        generatedNodes=set()
-        generatedNodes.add(str(self.root.data.current_state.numList))
-        stack = []
-        stack.append({"node": self.root, "depth": 0})
-        print(self.root)
-        
-        count=0
-        while stack:
-            current_node = stack.pop(0)
-            current_node=current_node["node"]
-
-            if current_node in self.searchedNodes:
-                continue
-
-            count+=1
-            self.searchedNodes.append(current_node)
-
-            if (count %100 ==0):
-                print(f"no of states generated:{count}")
-
-
-            if current_node.data.gameStatus == GameState.Running:
-                
-                children = current_node.get_all_children()
-                temp = []
                 for child in children:
-                    if str(child.data.current_state.numList) not in generatedNodes:
-                        generatedNodes.add(str(child.data.current_state.numList))
+                    if str(child.data.current_state.num_list) not in fresh_nodes:
+                        fresh_nodes.add(str(child.data.current_state.num_list))
                         print(child)
                         graph.node(str(current_node.data.current_state))
 
-                        if child.data.gameStatus==GameState.Won:
+                        if child.data.game_status == Game_State.Won:
                             graph.node(str(child.data.current_state), style='filled', color='lightgreen')
                         else:
                             graph.node(str(child.data.current_state))
+                        graph.edge(str(current_node.data.current_state), str(child.data.current_state),
+                                   label=f"{child.data.move_performed}")
 
-                        graph.edge(str(current_node.data.current_state), str(child.data.current_state), label=f"{child.data.movePerformed}")
-                        graph.render('dfs_graph', format='png', cleanup=True)
-
-
-                        temp.append({"node": child, "depth":2})
-                        
-                        if child.data.gameStatus == GameState.Won:
+                        graph.render('bfs_graph', format='png', cleanup=True)
+                        queue.append(child)
+                        if child.data.game_status == Game_State.Won:
                             self.finished = True
-                            print(f"Total Number of States:{count}")
                             return child
 
-                stack = [*temp, *stack]
+    def dfs(self, max_depth: int = 10) -> Node:
+        print("Performing Depth First Search\n")
+        fresh_nodes: Set[str] = set()
+        fresh_nodes.add(str(self.root_node.data.current_state.num_list))
+        stack: List[dict] = []
+        stack.append({"node": self.root_node, "depth": 0})
+        print(self.root_node)
 
+        while stack:
+            current_node = stack.pop(0)
+            depth = current_node["depth"]
+            current_node = current_node["node"]
 
-    def start_idfs(self, max_depth: int):
+            if current_node in self.searched_nodes:
+                continue
+            self.searched_nodes.append(current_node)
+
+            if current_node.data.game_status == Game_State.Running:
+                children = current_node.get_all_children()
+                depth_stack = []
+                for child in children:
+                    if str(child.data.current_state.num_list) not in fresh_nodes:
+                        fresh_nodes.add(str(child.data.current_state.num_list))
+                        print(child)
+                        graph.node(str(current_node.data.current_state))
+
+                        if child.data.game_status == Game_State.Won:
+                            graph.node(str(child.data.current_state), style='filled', color='lightgreen')
+                        else:
+                            graph.node(str(child.data.current_state))
+
+                        graph.edge(str(current_node.data.current_state), str(child.data.current_state),
+                                   label=f"{child.data.move_performed}")
+                        graph.render('dfs_graph', format='png', cleanup=True)
+                        
+                        depth+=1
+                        depth_stack.append({"node": child, "depth": depth})
+                        
+                        #guardclause
+                        if depth > max_depth:
+                            depth_stack.clear()
+                            continue
+
+                        if child.data.game_status == Game_State.Won:
+                            self.finished = True
+                            return child
+
+                stack = [*depth_stack, *stack]
+
+    def idfs(self, max_depth: int) -> Node:
         print("Performing Iterative Deepening Search\n")
         for depth in range(1, max_depth + 1):
-            generatedNodes=set()
-            generatedNodes.add(str(self.root.data.current_state.numList))
-            # print(generatedNodes)
-            print(self.root)
-          
-            result = self.depth_limited_search(self.root, depth, generatedNodes, depth)
-        
+            fresh_nodes: Set[str] = set()
+            fresh_nodes.add(str(self.root_node.data.current_state.num_list))
+            print(self.root_node)
+
+            result = self.dls(self.root_node, depth, fresh_nodes, depth)
+
             if result is not None:
                 return result
 
-    def depth_limited_search(self, node, depth, generatedNodes, current_depth):
+    def dls(self, node: Node, depth: int, fresh_nodes: Set[str], current_depth: int) -> Node:
         if depth == 0:
-            if node.data.gameStatus == GameState.Won:
+            if node.data.game_status == Game_State.Won:
                 self.finished = True
                 return node
             return None
 
-        if node in self.searchedNodes:
-            node.terminated=True
+        if node in self.searched_nodes:
+            node.terminated = True
 
-        self.searchedNodes.append(node)
-
-        if node.data.gameStatus == GameState.Running:
-            
-           children=node.get_all_children()
-        #    print(children)
-           for child in children:
-               if str(child.data.current_state.numList) not in generatedNodes:
-                   generatedNodes.add(str(child.data.current_state.numList))
-                   print(child)
-                   graph.node(str(node.data.current_state))
-                   if child.data.gameStatus==GameState.Won:
-                    graph.node(str(child.data.current_state), style='filled', color='lightgreen')
-                   else:
+        self.searched_nodes.append(node)
+        if node.data.game_status == Game_State.Running:
+            children = node.get_all_children()
+            for child in children:
+                if str(child.data.current_state.num_list) not in fresh_nodes:
+                    fresh_nodes.add(str(child.data.current_state.num_list))
+                    print(child)
+                    graph.node(str(node.data.current_state))
+                    if child.data.game_status == Game_State.Won:
+                        graph.node(str(child.data.current_state), style='filled', color='lightgreen')
+                    else:
                         graph.node(str(child.data.current_state))
 
-                   graph.edge(str(node.data.current_state), str(child.data.current_state), label=f"{child.data.movePerformed}")
-                   graph.render('idfs_graph', format='png', cleanup=True)
+                    graph.edge(str(node.data.current_state), str(child.data.current_state),
+                               label=f"{child.data.move_performed}")
+                    graph.render('idfs_graph', format='png', cleanup=True)
 
-                   child.parent.append(node)
-                   node.add_child(child)
-                   result=self.depth_limited_search(child, depth=depth-1, generatedNodes=generatedNodes, current_depth=current_depth)
-                   if result is not None:
-                       return result
+                    child.parent.append(node)
+                    node.add_child(child)
+                    result = self.dls(child, depth=depth - 1, fresh_nodes=fresh_nodes,
+                                      current_depth=current_depth)
+                    if result is not None:
+                        return result
 
-
-    def start_manhattan(self):
+    def a_star_manhattan(self) -> Node:
         print("Performing A* Search with Manhattan Distance\n")
-        self.root.g_value=0
-        self.root.f_value=AstarNode.manhatten_distance(self.root)
-        list=[]
-        list.append(self.root)  
-        generatedNodes=set()
-        generatedNodes.add(str(self.root.data.current_state.numList))
-        print(self.root)    
+        self.root_node.g_value = 0
+        self.root_node.f_value = Astar_Node.manhattan_distance(self.root_node)
+        list: List[Node] = [self.root_node]
+        
+        fresh_nodes: Set[str] = set()
+        fresh_nodes.add(str(self.root_node.data.current_state.num_list))
+        print(self.root_node)
 
-        count=0
         while list:
-            count +=1
-            current_node=list.pop(0)
-            if current_node in self.searchedNodes:
-                current_node.terminated=True
+            current_node = list.pop(0)
+            if current_node in self.searched_nodes:
+                current_node.terminated = True
                 continue
 
-            self.searchedNodes.append(current_node)
+            self.searched_nodes.append(current_node)
 
-            if current_node.data.gameStatus == GameState.Won:
+            if current_node.data.game_status == Game_State.Won:
                 self.finished = True
-                print(f"Total Number of nodes Expanded:{count}")
                 return current_node
 
-            if current_node.data.gameStatus == GameState.Running:   
+            if current_node.data.game_status == Game_State.Running:
                 children = current_node.get_all_children()
                 for child in children:
-                    if str(child.data.current_state.numList) not in generatedNodes:
+                    if str(child.data.current_state.num_list) not in fresh_nodes:
                         child.parent.append(current_node)
-                        current_node.add_child(child)   
-                        child.g_value=current_node.g_value+1
-                        child.f_value=AstarNode.manhatten_distance(child) + child.g_value 
+                        current_node.add_child(child)
+                        child.g_value = current_node.g_value + 1
+                        child.f_value = Astar_Node.manhattan_distance(child) + child.g_value
 
-                        generatedNodes.add(str(child.data.current_state.numList))
+                        fresh_nodes.add(str(child.data.current_state.num_list))
 
                         if not self.finished:
-                          
                             print(child)
-                            
+
                             graph.node(str(current_node.data.current_state))
                             graph.node(str(child.data.current_state))
-                            if child.data.gameStatus==GameState.Won:
+                            if child.data.game_status == Game_State.Won:
                                 graph.node(str(child.data.current_state), style='filled', color='lightgreen')
                             else:
                                 graph.node(str(child.data.current_state))
-                            graph.edge(str(current_node.data.current_state), str(child.data.current_state), label=f"{child.data.movePerformed} h:{child.f_value}")
+                            graph.edge(str(current_node.data.current_state), str(child.data.current_state),
+                                       label=f"{child.data.move_performed} h:{child.f_value}")
                             graph.render('manhattan_graph', format='png', cleanup=True)
-                            
 
-                        if child.data.gameStatus==GameState.Won:
+                        if child.data.game_status == Game_State.Won:
                             self.finished = True
-                            print(f"Total Number of States:{count}")
                         bisect.insort(list, child, key=lambda x: x.f_value)
-                        
-    def start_misplacedtiles(self):
+
+    def a_star_misplaced_tiles(self) -> Node:
         print("Performing A* Search with Misplaced Tiles\n")
-        self.root.g_value=0
-        self.root.f_value=AstarNode.no_of_misplaced_tiles(self.root)
-        list=[]
-        list.append(self.root)
-        generatedNodes=set()
-        generatedNodes.add(str(self.root.data.current_state.numList))
-        print(self.root)    
-        count=0 
+
+        self.root_node.g_value = 0
+        self.root_node.f_value = Astar_Node.no_of_misplaced_tiles(self.root_node)
+
+        list: List[Node] = []
+        list.append(self.root_node)
+
+        fresh_nodes: Set[str] = set()
+        fresh_nodes.add(str(self.root_node.data.current_state.num_list))
+        print(self.root_node)
+        
         while list:
-            count+=1
-            current_node=list.pop(0)
-            if current_node in self.searchedNodes:
-                current_node.terminated=True
+            current_node = list.pop(0)
+
+            if current_node in self.searched_nodes:
+                current_node.terminated = True
                 continue
-            self.searchedNodes.append(current_node)
-            if current_node.data.gameStatus == GameState.Won:
+
+            self.searched_nodes.append(current_node)
+
+            if current_node.data.game_status == Game_State.Won:
                 self.finished = True
-                print(f"Total Number of States:{count}")
+
                 return current_node
-            if current_node.data.gameStatus==GameState.Running:
-                children=current_node.get_all_children()
+            if current_node.data.game_status == Game_State.Running:
+                children = current_node.get_all_children()
+
                 for child in children:
-                    if str(child.data.current_state.numList) not in generatedNodes:
+                    if str(child.data.current_state.num_list) not in fresh_nodes:
                         child.parent.append(current_node)
-                        current_node.add_child(child)   
-                        child.g_value=current_node.g_value+1
-                        child.f_value=child.g_value+AstarNode.no_of_misplaced_tiles(child)
-                        generatedNodes.add(str(child.data.current_state.numList))
+                        current_node.add_child(child)
+                        child.g_value = current_node.g_value + 1
+                        child.f_value = child.g_value + Astar_Node.no_of_misplaced_tiles(child)
+                        fresh_nodes.add(str(child.data.current_state.num_list))
+
                         if not self.finished:
                             list.append(child)
                             list.sort(key=lambda x: x.f_value)
-                            print(child)    
+                            print(child)
                             graph.node(str(current_node.data.current_state))
-                            if child.data.gameStatus==GameState.Won:
+
+                            if child.data.game_status == Game_State.Won:
                                 graph.node(str(child.data.current_state), style='filled', color='lightgreen')
                             else:
                                 graph.node(str(child.data.current_state))
-                            graph.edge(str(current_node.data.current_state), str(child.data.current_state), label=f"{child.data.movePerformed} h:{child.f_value}")
-                            graph.render('total_graph', format='png', cleanup=True)
-                        if child.data.gameStatus==GameState.Won:
-                            self.finished = True
-                           
 
+                            graph.edge(str(current_node.data.current_state), str(child.data.current_state),
+                                       label=f"{child.data.move_performed} h:{child.f_value}")
+                            graph.render('total_graph', format='png', cleanup=True)
+
+                        if child.data.game_status == Game_State.Won:
+                            self.finished = True
