@@ -1,1 +1,1 @@
-*.js linguist-vendored
+*.js  *.jsx linguist-vendored
